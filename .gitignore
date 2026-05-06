@@ -1,0 +1,6 @@
+before_subclean
+data_in
+figures
+old
+old_paris
+__pycache__

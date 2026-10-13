@@ -474,8 +474,8 @@ def main_plotter(absplotc,modplotc, da, mask, labs=False, axin=None, transform=c
                       xlocs=xlocs, ylocs=ylocs, x_inline=False, y_inline=False)
     gl.xlines = True
     gl.ylines = True
-    gl.xlabel_style = {'size': 15}
-    gl.ylabel_style = {'size': 15}
+    gl.xlabel_style = {'size': 20}
+    gl.ylabel_style = {'size': 20}
     gl.top_labels = False
     ####################### Define a new colormap#########################################
     norm =mpl.colors.Normalize(vmin, vmax) # determine colormap The maximum and minimum value of 
@@ -508,6 +508,7 @@ def main_plotter(absplotc,modplotc, da, mask, labs=False, axin=None, transform=c
     if borders: ax.add_feature(cf.BORDERS)
     if borders: ax.add_feature(cf.LAKES.with_scale('50m'), facecolor='white',
                edgecolor='black', zorder=0)
+    #ax.set_title(r'{\bfseries ' + title.replace('\n', r'\\') + '}')
     ax.set_title(title)
     #
     return sbl
@@ -550,7 +551,7 @@ def remo_plotter(absplotc,modplotc,domaininfo,modelruns,abs_source,abs_vals_mean
     # Add a colorbar axis after first plot
     cbar_ax = fig.add_axes([0.2, bbox.y0-(bbox.y1-bbox.y0)*0.25, 0.6, 0.01]) # set the y-value to be 0.25 time of total height below the y0
     cbar=fig.colorbar(sbl, cax=cbar_ax,orientation='horizontal')
-    cbar.set_label(absplotc.label, fontsize=24)
+    cbar.set_label(absplotc.label, fontsize=28)
     #
     # Calculate shift due to the colorbar (make it 50% bigger than the colobar shift)
     cbbox = cbar_ax.get_position()
@@ -586,6 +587,7 @@ def remo_plotter(absplotc,modplotc,domaininfo,modelruns,abs_source,abs_vals_mean
     # Draw the colorbar
     cbar=fig.colorbar(sbl, cax=cbar_ax,orientation='horizontal')
     cbar.set_label(modplotc.label, fontsize=24)
+    cbar.ax.tick_params(labelsize=22)
     plt.savefig(figpath+figname+'.png',format="png",bbox_inches='tight', pad_inches=0)
 ############################################################################################
 ############################################################################################

@@ -443,6 +443,63 @@ def open_prepare_dwd(dpath,filename,varin,year,quantiles,lreplace_median,addc=0.
     return dwd_data.compute()
 ############################################################################################
 ############################################################################################
+def open_prepare_dwd_uhi_new(dpath,uhivar,urfiles,urvar,rurfiles,rurvarin,year,quantiles,lreplace_median,addc=0.0):
+    """ Opend and prepare dwd data"""
+    #dwd_raw = xr.open_dataset(dpath+filename)[[varin]].squeeze()+addc
+    datasets = []
+    for rfile in urfiles:
+        if rfile.startswith("produkt_air_temperature_"):
+            urvarin = urvar
+        elif rfile.startswith("produkt_tu_stunde_"):
+            urvarin = rurvarin
+        rds = dwd_txt_to_netcdf(dpath,rfile,[urvarin])+addc
+        rds = rds.where(rds['time'].dt.year == year, drop=True)
+        datasets.append(rds)
+        del rds
+    rds_all = xr.concat(
+        datasets,
+        dim="station",
+        join="outer" # keep all timestamps from all files
+    )
+    dwd_raw_urb = rds_all.mean(dim="station", skipna=True)
+    del rds_all
+    # prepare rural files and make a mean timewise
+    datasets = []
+    for rfile in rurfiles:
+        rds = dwd_txt_to_netcdf(dpath,rfile,[rurvarin])+addc
+        rds = rds.where(rds['time'].dt.year == year, drop=True).rename({rurvarin:urvarin})
+        datasets.append(rds)
+        del rds
+    rds_all = xr.concat(
+        datasets,
+        dim="station",
+        join="outer" # keep all timestamps from all files
+    )
+    dwd_raw_rur = rds_all.mean(dim="station", skipna=True)
+    del rds_all
+    dwd_raw_uhi = (dwd_raw_urb - dwd_raw_rur).rename({urvarin:uhivar})
+    dwd_raw_uhi = dwd_raw_uhi[uhivar].assign_coords(
+        season=dwd_raw_uhi[uhivar].time.dt.season,
+        hour=dwd_raw_uhi[uhivar].time.dt.hour
+    ).groupby(["season", "hour"])
+    dwd_uhi = dwd_raw_uhi.quantile(quantiles, dim='time')
+    dwd_raw_urb = dwd_raw_urb.assign_coords(
+        season=dwd_raw_urb[urvarin].time.dt.season,
+        hour=dwd_raw_urb[urvarin].time.dt.hour
+    ).groupby(["season", "hour"])
+    dwd_raw_urb_q = dwd_raw_urb.quantile(quantiles, dim='time')
+    dwd_raw_rur = dwd_raw_rur.assign_coords(
+        season=dwd_raw_rur[urvarin].time.dt.season,
+        hour=dwd_raw_rur[urvarin].time.dt.hour
+    ).groupby(["season", "hour"])
+    dwd_raw_rur_q = dwd_raw_rur.quantile(quantiles, dim='time')
+    if (lreplace_median):
+        dwd_uhi.loc[dict(quantile=0.5)] = dwd_raw_uhi.mean("time")
+        dwd_raw_urb_q.loc[dict(quantile=0.5)] = dwd_raw_urb.mean("time")
+        dwd_raw_rur_q.loc[dict(quantile=0.5)] = dwd_raw_rur.mean("time")
+    return dwd_uhi.compute(), dwd_raw_urb_q[urvarin].squeeze().compute(), dwd_raw_rur_q[urvarin].squeeze().compute()
+############################################################################################
+############################################################################################
 def open_prepare_dwd_uhi(dpath,uhivar,urfile,urvarin,rurfiles,rurvarin,year,quantiles,lreplace_median,addc=0.0):
     """ Opend and prepare dwd data"""
     #dwd_raw = xr.open_dataset(dpath+filename)[[varin]].squeeze()+addc

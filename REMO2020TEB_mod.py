@@ -239,7 +239,7 @@ def badc_csv_to_netcdf(data_dir: str, input_filename: str):
         return [p.strip().strip('"') for p in parts]
 
     # ---------- 1) Read file and find 'data' section ----------
-    in_path = os.path.join(data_dir, input_filename)
+    in_path = data_dir / input_filename
     with open(in_path, "r", encoding="utf-8") as f:
         lines = f.readlines()
 
@@ -390,7 +390,7 @@ def dwd_txt_to_netcdf(datapath, io_file, variables):
         List of variable names (columns) to include in the NetCDF file.
     """
     # === STEP 1: READ THE TXT FILE ===
-    df = pd.read_csv(datapath+io_file+'.txt', sep=';', skipinitialspace=True)
+    df = pd.read_csv(datapath / f"{io_file}.txt", sep=';', skipinitialspace=True)
     df.columns = [col.strip() for col in df.columns]
 
     # === STEP 2: CLEAN DATA ===

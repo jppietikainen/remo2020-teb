@@ -1,0 +1,22 @@
+name: kernelR2020TEB
+channels:
+  - conda-forge
+dependencies:
+  - python=3.10
+  - ipykernel
+  - matplotlib
+  - ca-certificates
+  - openssl
+  - cartopy
+  - pyremo
+  - certifi
+  - dask
+  - cmaps
+  - netcdf4
+  - h5netcdf
+  - regionmask
+  - xesmf
+  - latexcodec
+  - openpyxl
+  - xclim
+  - seaborn

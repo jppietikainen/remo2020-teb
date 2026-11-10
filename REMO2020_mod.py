@@ -17,17 +17,18 @@ from shapely.geometry import Polygon
 from shapely.ops import transform
 from pyproj import CRS, Transformer
 import pyproj
+from pathlib import Path
 ############################################################################################
 ############################################################################################
 # create variable info class for model
 class modelclass:
-    def __init__(self, userexp, runame, r2020file, varname='', maskname=''):
+    def __init__(self, userexp, runame, reso, varname='', maskname=''):
         self.userexp = userexp # XXXYYY
         self.runame = runame # name of the run
-        self.r2020file = r2020file # is the file produced by remo2020
         self.filenames = []
         self.vardiff = []
         self.mask = []
+        self.reso = reso
         self.varname = varname
         self.maskname = maskname
 ############################################################################################
@@ -155,7 +156,7 @@ def calc_remo_precipitation(ds):
     import calendar
     #
     # Sum up large scale (stratiform) and convective precipitation
-    preci_out = (pr.parse_dates(ds["APRL"])+pr.parse_dates(ds["APRC"])).rename("totpre") # old 142+143
+    preci_out = ds["APRL"]+ds["APRC"].rename("totpre") # old 142+143
     # Calculate the number of days spesific for the dates of the input data
     days_per_month = []
     for tstep in preci_out.time:
@@ -368,7 +369,7 @@ def eobs_temp_open(var,eobsfile,ystart,yend,hcorrection,regridder,dlim,lake_mask
     eobs_daydata_gridded = regridder(eobs_daydatac+273.15) # C to K at the same time
     eobs_daydata_gridded = eobs_daydata_gridded.where(eobs_daydata_gridded > 0, drop=False) # get rid off 0 zeros from regridding
     #
-    eobs_mdata = (eobs_daydata_gridded.resample(time='1MS').mean()[var] + hcorrection.squeeze("time").reset_coords(["time", "lon_2", "lat_2"],drop=True)).compute()
+    eobs_mdata = (eobs_daydata_gridded.resample(time='1MS').mean()[var] + hcorrection.reset_coords(["lon_2", "lat_2"],drop=True)).compute()
     #
     # mask months less than dlim days
     eobs_mask_tmp = xr.where(eobs_daydata_gridded[var] > 0.0, 1, 0)
@@ -588,7 +589,7 @@ def remo_plotter(absplotc,modplotc,domaininfo,modelruns,abs_source,abs_vals_mean
     cbar=fig.colorbar(sbl, cax=cbar_ax,orientation='horizontal')
     cbar.set_label(modplotc.label, fontsize=24)
     cbar.ax.tick_params(labelsize=22)
-    plt.savefig(figpath+figname+'.png',format="png",bbox_inches='tight', pad_inches=0)
+    plt.savefig(figpath / f"{figname}.png",format="png",bbox_inches='tight', pad_inches=0)
 ############################################################################################
 ############################################################################################
 def remo_plotter_2mods(absplotc,modplotc,domaininfo,modelruns_1,modelruns_2,abs_source_1,abs_vals_mean_1,abs_source_2,abs_vals_mean_2,seasons,pole,lshade,figpath,figname):
@@ -694,7 +695,7 @@ def remo_plotter_2mods(absplotc,modplotc,domaininfo,modelruns_1,modelruns_2,abs_
     # Draw the colorbar
     cbar=fig.colorbar(sbl, cax=cbar_ax,orientation='horizontal')
     cbar.set_label(modplotc.label, fontsize=24)
-    plt.savefig(figpath+figname+'.png',format="png",bbox_inches='tight', pad_inches=0)
+    plt.savefig(figpath / f"{figname}.png",format="png",bbox_inches='tight', pad_inches=0)
 ############################################################################################
 ############################################################################################
 def remo_plotter_mon(absplotc,modplotc,domaininfo,modelruns,abs_source,abs_vals_mean,months,pole,lshade,figpath,figname):
